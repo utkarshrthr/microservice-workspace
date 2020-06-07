@@ -22,7 +22,7 @@ public class MovieRatingController {
 	
 	@GetMapping("/user/{userId}")
 	public UserRating getUserRatings(@PathVariable("userId")String userId) {
-		List<Rating> ratings = Arrays.asList(new Rating("12", 7), new Rating("23", 8));
+		List<Rating> ratings = Arrays.asList(new Rating("500", 7), new Rating("501", 8));
 		UserRating userRating = new UserRating();
 		userRating.setRatings(ratings);
 		return userRating;
