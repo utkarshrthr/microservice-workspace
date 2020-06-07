@@ -1,6 +1,6 @@
 package com.catalog.movie.app.controller;
 
-import java.util.Arrays;
+//import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,28 +10,36 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
+//import org.springframework.web.client.RestTemplate;
 //import org.springframework.web.reactive.function.client.WebClient;
 
 import com.catalog.movie.app.model.CatalogItem;
-import com.catalog.movie.app.model.Movie;
-import com.catalog.movie.app.model.Rating;
+//import com.catalog.movie.app.model.Movie;
+//import com.catalog.movie.app.model.Rating;
 import com.catalog.movie.app.model.UserRating;
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.catalog.movie.app.service.MovieInfoService;
+import com.catalog.movie.app.service.UserRatingService;
+//import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 //import com.netflix.discovery.DiscoveryClient;
 
 @RestController
 @RequestMapping("/api/catalog")
 public class MovieCatalogueController {
 
-	@Autowired
+	/*@Autowired
 	private RestTemplate restTemplate;
 	
-	/*@Autowired
+	@Autowired
 	private WebClient.Builder webClientBuilder;
 	
 	@Autowired
 	private DiscoveryClient discoveryClient;*/
+	
+	@Autowired
+	private UserRatingService userRatingService;
+	
+	@Autowired
+	private MovieInfoService movieInfoService;
 	
 	@GetMapping(path = "/{userId}", produces = {MediaType.APPLICATION_JSON_VALUE})
 	public List<CatalogItem> getCatalog(@PathVariable("userId") String userId){
@@ -42,13 +50,13 @@ public class MovieCatalogueController {
 		
 		//RestTemplate restTemplate = new RestTemplate();
 		
-		UserRating userRating = getUserRating(userId);
+		UserRating userRating = userRatingService.getUserRating(userId);
 
 		// using rest-template
 		return userRating
 				.getRatings()
 				.stream()
-				.map(rating -> getCatalogItem(rating))
+				.map(rating -> movieInfoService.getCatalogItem(rating))
 				.collect(Collectors.toList()); 
 		
 		// using web-client builder
@@ -67,28 +75,6 @@ public class MovieCatalogueController {
 				.collect(Collectors.toList());*/
 		
 		//return Collections.singletonList(new CatalogItem("Titanic", "Leonardo DeCaprio, Kate Winslet", 7));
-	}
-
-	@HystrixCommand(fallbackMethod = "getFallbackUserRating")
-	private UserRating getUserRating(String userId) {
-		return restTemplate.getForObject("http://movie-ratings-service/api/ratings/user/"+userId, UserRating.class);
-	}
-	
-	private UserRating getFallbackUserRating(String userId) {
-		UserRating userRating = new UserRating();
-		userRating.setRatings(Arrays.asList(new Rating("0", 0)));
-		userRating.setUserId(userId);
-		return userRating;
-	}
-	
-	@HystrixCommand(fallbackMethod = "getFallbackCatalogItem")
-	private CatalogItem getCatalogItem(Rating rating) {
-		Movie movie = restTemplate.getForObject("http://movie-info-service/api/movie/"+rating.getMovieId(), Movie.class);
-		return new CatalogItem(movie.getName(), movie.getOverview(), rating.getRating());
-	}
-	
-	private CatalogItem getFallbackCatalogItem(Rating rating) {
-		return new CatalogItem("", "", 0);
 	}
 }
  
